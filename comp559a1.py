@@ -14,8 +14,9 @@ V = V * args.scale
 V = V + args.translate
 
 
-# QUESTION 1
-x, y, z = symbols('x3 y3 z3')
+#QUESTION 1
+
+x, y, z = symbols('x y z')
 
 A = Matrix(V[F[0][0]])
 B = Matrix(V[F[0][1]])
@@ -29,29 +30,54 @@ D = Matrix([x, y, z])
 
 vol_func = lambdify((x, y, z), abs(C.dot(A.cross(B))/6), "numpy")
 
-tetrahedron_volume = vol_func(0,0,0)
+tetrahedron_vol = vol_func(0,0,0)
 
-mass = tetrahedron_volume * args.density
+mass = tetrahedron_vol * args.density
+
+
+#QUESTION 2
+
+D2 = Matrix([0, 0, 0])
+
+rho = args.density
+
+#Using matrices from question 1
+integrand = (x*A + y*B + z*C + (1-(x + y + z))*D2)*rho
+
+q2_result = 6*tetrahedron_vol*integrate(integrand, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1))
+
+
+#QUESTION 3
+
+r_A = A - D2
+
+inertia_integrand = args.density * (r_A.norm()**2 * Matrix.eye(3) - r_A * r_A.transpose())
+
+inertia_tensor = integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
+
+inertia_tensor *= mass
+
+
+
+
+
+# QUESTION 1
+if args.test == 1:
+    print("vol = ", tetrahedron_vol)
+
+
+    print("mass = ", mass)
 
 
 
 # QUESTION 2
-
-
-
-if args.test == 1:
-
-    print("Volume of tetrahedron: ", tetrahedron_volume)
-
-
-    print("Mass of tetrahedron: ", mass)
-
 elif args.test == 2:
 
-    rho = symbols('rho', positive=True)
-
-    baycentric_func = lambdify((x, y, z), (C.dot(A.cross(B))/6), "numpy")
+    print("weighted com = ", q2_result)
 
     
+# QUESTION 3
+elif args.test == 3:
 
+    print("J = ", inertia_tensor)
 
