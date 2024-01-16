@@ -49,13 +49,23 @@ q2_result = 6*tetrahedron_vol*integrate(integrand, (z, 0, 1-x-y), (y, 0, 1-x), (
 
 #QUESTION 3
 
-r_A = A - D2
+# r_A = A - D2
 
-inertia_integrand = args.density * (r_A.norm()**2 * Matrix.eye(3) - r_A * r_A.transpose())
+p = x*A + y*B + z*C + (1-(x + y + z))*D2
 
-inertia_tensor = integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
+r_matrix = Matrix([[0, -p[2], p[1]],[p[2], 0, -p[0]], [-p[1], p[0], 0]])
 
-inertia_tensor *= mass
+#debugging tools
+
+pprint(r_matrix)
+
+pprint(r_matrix.transpose())
+
+inertia_integrand = r_matrix.transpose()*r_matrix
+
+j = rho*integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
+
+
 
 
 
@@ -79,5 +89,6 @@ elif args.test == 2:
 # QUESTION 3
 elif args.test == 3:
 
-    print("J = ", inertia_tensor)
+    print("J = ", j)
+    pprint(j)
 
