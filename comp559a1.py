@@ -99,7 +99,7 @@ if __name__ == "__main__":
     B = Matrix([B_1, B_2, B_3])
     C = Matrix([C_1, C_2, C_3])
     D = Matrix([x, y, z])
-    
+
     total_vol_q4 = 0
     com_q4 = Matrix([0, 0, 0])
     j_q4 = Matrix([[0, 0, 0],[0, 0, 0], [0, 0, 0]])
@@ -114,8 +114,11 @@ if __name__ == "__main__":
     vol_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), vol_tetra_q4, 'sympy')
     weighted_com_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), integrate(integrand_com_q4, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1)), 'sympy')
     j_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), integrate(inertia_integrand_q4, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1)), 'sympy')
+    r_matrix_q4_func = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), integrate(r_matrix_q4, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1)), 'sympy')
 
     j_q4 = Matrix([[0, 0, 0],[0, 0, 0], [0, 0, 0]])
+    r_matrix_sum_q4 = Matrix([[0, 0, 0],[0, 0, 0], [0, 0, 0]])
+
     for f in F: 
         A = Matrix(V[f[0]])
         B = Matrix(V[f[1]])
@@ -130,6 +133,9 @@ if __name__ == "__main__":
         #rotational intertia
         j_q4 += j_func_q4(V[f[0]],V[f[1]],V[f[2]])*tetrahedron_vol_q4*6*rho
 
+        #r value
+        r_matrix_sum_q4 += r_matrix_q4_func(V[f[0]],V[f[1]],V[f[2]])*tetrahedron_vol_q4*6*rho
+
         # p_q4 = x*A_q4 + y*B_q4 + z*C_q4
         # r_matrix_q4 = Matrix([[0, -p_q4[2], p_q4[1]],[p_q4[2], 0, -p_q4[0]], [-p_q4[1], p_q4[0], 0]])
         # inertia_integrand_q4 = r_matrix_q4.transpose()*r_matrix_q4
@@ -137,14 +143,25 @@ if __name__ == "__main__":
 
     mass_q4 = total_vol_q4 * args.density
 
+    mass_q4_rounded = np.round(mass_q4, decimals = 3)
+
     print("volume = ", np.round(total_vol_q4, decimals = 3))
-    print("mass = ", np.round(mass_q4, decimals = 3))
+    print("mass = ", mass_q4_rounded)
     print("com = ", com_q4/mass_q4)
 
-    numpy_ar = np.array(j_q4, dtype=float)
-    rounded_j_q4_ar = np.round(numpy_ar, decimals = 3)
+    j_q4_ar = np.array(j_q4, dtype=float)
+    rounded_j_q4_ar = np.round(j_q4_ar, decimals = 3)
     j_q4_rounded = Matrix(rounded_j_q4_ar)
     print("J = ")
     pprint(j_q4_rounded)
 
+    print("R = ")
+    r_matrix_sum_q4_ar = np.array(r_matrix_sum_q4, dtype=float)
+    rounded_r_matrix_sum_q4_ar = np.round(r_matrix_sum_q4_ar, decimals = 3)
+    r_matrix_sum_q4_rounded = Matrix(rounded_r_matrix_sum_q4_ar)
+    
+    three_I_matrix = Matrix([[1, 0, 0],[0, 1, 0], [0, 0, 1]])
+    M = Matrix.vstack(Matrix.hstack(mass_q4_rounded*three_I_matrix, r_matrix_sum_q4_rounded.transpose()), Matrix.hstack(r_matrix_sum_q4_rounded, j_q4_rounded))
+    print("M = ")
+    pprint(M)
 
