@@ -2,6 +2,11 @@ from sympy import *
 import numpy as np
 import igl
 import argparse
+
+
+#Robert Liu
+#260981372
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", type=str, default="cube.obj")
 parser.add_argument("--density", type=float, default=1000, help="density in kg/m^3")
@@ -23,7 +28,7 @@ if __name__ == "__main__":
     C = Matrix(V[F[0][2]])
     D = Matrix([x, y, z])
 
-    vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
+    vol_func = lambdify((x, y, z), (A.dot(B.cross(C))/6))
 
     tetrahedron_vol = vol_func(0,0,0)
 
