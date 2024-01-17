@@ -14,81 +14,115 @@ V = V * args.scale
 V = V + args.translate
 
 
-#QUESTION 1
+
+#QUESTION 4
 
 x, y, z = symbols('x y z')
-
-A = Matrix(V[F[0][0]])
-B = Matrix(V[F[0][1]])
-C = Matrix(V[F[0][2]])
 D = Matrix([x, y, z])
 
-# debugging print statements
-# print("first vector is: ", V[F[0][0]])
-# print("second vector is: ", V[F[0][1]])
-# print("third vector is: ", V[F[0][2]])
-
-vol_func = lambdify((x, y, z), abs(C.dot(A.cross(B))/6), "numpy")
-
-tetrahedron_vol = vol_func(0,0,0)
-
-mass = tetrahedron_vol * args.density
+total_vol = 0
+for f in F: 
+    A = Matrix(V[f[0]])
+    B = Matrix(V[f[1]])
+    C = Matrix(V[f[2]])
+    vol_func = lambdify((x, y, z), (B-A).dot((C-A).cross(D-A))/6)
+    tetrahedron_vol = vol_func(0,0,0)
+    total_vol += tetrahedron_vol
 
 
-#QUESTION 2
-
-D2 = Matrix([0, 0, 0])
-
-rho = args.density
-
-#Using matrices from question 1
-integrand = (x*A + y*B + z*C + (1-(x + y + z))*D2)*rho
-
-q2_result = 6*tetrahedron_vol*integrate(integrand, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1))
-
-
-#QUESTION 3
-
-# r_A = A - D2
-
-p = x*A + y*B + z*C + (1-(x + y + z))*D2
-
-r_matrix = Matrix([[0, -p[2], p[1]],[p[2], 0, -p[0]], [-p[1], p[0], 0]])
-
-#debugging tools
-
-pprint(r_matrix)
-
-pprint(r_matrix.transpose())
-
-inertia_integrand = r_matrix.transpose()*r_matrix
-
-j = rho*integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
-
-
-
-
-
-
+print("Volume of bunny = ", total_vol)
 
 # QUESTION 1
 if args.test == 1:
+    #QUESTION 1
+
+    x, y, z = symbols('x y z')
+
+    A = Matrix(V[F[0][0]])
+    B = Matrix(V[F[0][1]])
+    C = Matrix(V[F[0][2]])
+    D = Matrix([x, y, z])
+
+    # debugging print statements
+    # print("first vector is: ", V[F[0][0]])
+    # print("second vector is: ", V[F[0][1]])
+    # print("third vector is: ", V[F[0][2]])
+
+    vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
+
+    tetrahedron_vol = vol_func(0,0,0)
+
+    mass = tetrahedron_vol * args.density
     print("vol = ", tetrahedron_vol)
-
-
     print("mass = ", mass)
 
 
 
 # QUESTION 2
 elif args.test == 2:
+    #QUESTION 1
+    x, y, z = symbols('x y z')
 
+    A = Matrix(V[F[0][0]])
+    B = Matrix(V[F[0][1]])
+    C = Matrix(V[F[0][2]])
+    D2 = Matrix([0, 0, 0])
+
+    # debugging print statements
+    # print("first vector is: ", V[F[0][0]])
+    # print("second vector is: ", V[F[0][1]])
+    # print("third vector is: ", V[F[0][2]])
+
+    vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
+
+    tetrahedron_vol = vol_func(0,0,0)
+
+    rho = args.density
+
+    #Using matrices from question 1
+    integrand = (x*A + y*B + z*C + (1-(x + y + z))*D2)*rho
+
+    q2_result = 6*tetrahedron_vol*integrate(integrand, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1))
+
+    mass = tetrahedron_vol * args.density
     print("weighted com = ", q2_result)
+
+    
 
     
 # QUESTION 3
 elif args.test == 3:
+    x, y, z = symbols('x y z')
+    A = Matrix(V[F[0][0]])
+    B = Matrix(V[F[0][1]])
+    C = Matrix(V[F[0][2]])
+    D = Matrix([x, y, z])
 
-    print("J = ", j)
+    # debugging print statements
+    # print("first vector is: ", V[F[0][0]])
+    # print("second vector is: ", V[F[0][1]])
+    # print("third vector is: ", V[F[0][2]])
+
+    vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
+
+    tetrahedron_vol = vol_func(0,0,0)
+
+    rho = args.density
+
+    p = x*A + y*B + z*C
+
+    r_matrix = Matrix([[0, -p[2], p[1]],[p[2], 0, -p[0]], [-p[1], p[0], 0]])
+
+    #debugging tools
+
+    #pprint(r_matrix)
+
+    #pprint(r_matrix.transpose())
+
+    inertia_integrand = r_matrix.transpose()*r_matrix
+
+    j = 6*tetrahedron_vol*rho*integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
+
+    print("J = ")
     pprint(j)
 
