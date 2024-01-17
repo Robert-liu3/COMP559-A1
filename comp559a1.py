@@ -14,26 +14,6 @@ V = V * args.scale
 V = V + args.translate
 
 
-def is_face_inverted(vertices, face):
-    A = Matrix(vertices[face[0]])
-    B = Matrix(vertices[face[1]])
-    C = Matrix(vertices[face[2]])
-
-    edge1 = B - A
-    edge2 = C - A
-
-    normal_vector = edge1.cross(edge2)
-
-    centroid = (A + B + C) / 3
-
-    if normal_vector > 0:
-        print("face is inverted")
-        return False 
-    else:
-        print("face is not inverted")
-        return True 
-
-
 if __name__ == "__main__":
 
     x, y, z = symbols('x y z')
@@ -42,6 +22,12 @@ if __name__ == "__main__":
     B = Matrix(V[F[0][1]])
     C = Matrix(V[F[0][2]])
     D = Matrix([x, y, z])
+
+    vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
+
+    tetrahedron_vol = vol_func(0,0,0)
+
+    rho = args.density
 
     # QUESTION 1
     if args.test == 1:
@@ -52,11 +38,7 @@ if __name__ == "__main__":
         # print("second vector is: ", V[F[0][1]])
         # print("third vector is: ", V[F[0][2]])
 
-        vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
-
-        tetrahedron_vol = vol_func(0,0,0)
-
-        mass = tetrahedron_vol * args.density
+        mass = tetrahedron_vol * rho
         print("vol = ", tetrahedron_vol)
         print("mass = ", mass)
 
@@ -72,10 +54,6 @@ if __name__ == "__main__":
         # print("second vector is: ", V[F[0][1]])
         # print("third vector is: ", V[F[0][2]])
 
-        vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
-
-        tetrahedron_vol = vol_func(0,0,0)
-
         rho = args.density
 
         #Using matrices from question 1
@@ -83,8 +61,9 @@ if __name__ == "__main__":
 
         q2_result = 6*tetrahedron_vol*integrate(integrand, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1))
 
-        mass = tetrahedron_vol * args.density
         print("weighted com = ", q2_result)
+
+        
 
         
 
@@ -95,12 +74,6 @@ if __name__ == "__main__":
         # print("first vector is: ", V[F[0][0]])
         # print("second vector is: ", V[F[0][1]])
         # print("third vector is: ", V[F[0][2]])
-
-        vol_func = lambdify((x, y, z), abs((A.dot(B.cross(C))/6)))
-
-        tetrahedron_vol = vol_func(0,0,0)
-
-        rho = args.density
 
         p = x*A + y*B + z*C
 
@@ -121,18 +94,57 @@ if __name__ == "__main__":
 
     #QUESTION 4
 
-    x, y, z = symbols('x y z')
+    A_1, B_1, C_1, A_2, B_2, C_2, A_3, B_3, C_3 = symbols('A_1 B_1 C_1 A_2 B_2 C_2 A_3 B_3 C_3')
+    A = Matrix([A_1, A_2, A_3])
+    B = Matrix([B_1, B_2, B_3])
+    C = Matrix([C_1, C_2, C_3])
     D = Matrix([x, y, z])
+    
+    total_vol_q4 = 0
+    com_q4 = Matrix([0, 0, 0])
+    j_q4 = Matrix([[0, 0, 0],[0, 0, 0], [0, 0, 0]])
 
-    total_vol = 0
+    vol_tetra_q4 = A.dot(B.cross(C))/6
+    integrand_com_q4 = (x*A + y*B + z*C)*rho
+
+    p_q4 = x*A + y*B + z*C
+    r_matrix_q4 = Matrix([[0, -p_q4[2], p_q4[1]],[p_q4[2], 0, -p_q4[0]], [-p_q4[1], p_q4[0], 0]])
+    inertia_integrand_q4 = r_matrix_q4.transpose()*r_matrix_q4
+
+    vol_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), vol_tetra_q4, 'sympy')
+    weighted_com_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), integrate(integrand_com_q4, (z, 0, 1-x-y), (y, 0, 1-x), (x, 0, 1)), 'sympy')
+    j_func_q4 = lambdify(([A_1, A_2, A_3], [B_1, B_2, B_3], [C_1, C_2, C_3]), integrate(inertia_integrand_q4, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1)), 'sympy')
+
+    j_q4 = Matrix([[0, 0, 0],[0, 0, 0], [0, 0, 0]])
     for f in F: 
-        vol_func = lambdify((x, y, z), (B-A).dot((C-A).cross(D-A))/6)
-        tetrahedron_vol = vol_func(0,0,0)
-        if (is_face_inverted(V, f)):  
-            total_vol -= tetrahedron_vol
-        else:
-            total_vol += tetrahedron_vol
+        A = Matrix(V[f[0]])
+        B = Matrix(V[f[1]])
+        C = Matrix(V[f[2]])
 
+        tetrahedron_vol_q4 = vol_func_q4(V[f[0]],V[f[1]],V[f[2]])
+        total_vol_q4 += tetrahedron_vol_q4
 
-    print("Volume of bunny = ", total_vol)
+        #weighted com
+        com_q4 += weighted_com_func_q4(V[f[0]],V[f[1]],V[f[2]])*tetrahedron_vol_q4*6
+
+        #rotational intertia
+        j_q4 += j_func_q4(V[f[0]],V[f[1]],V[f[2]])*tetrahedron_vol_q4*6*rho
+
+        # p_q4 = x*A_q4 + y*B_q4 + z*C_q4
+        # r_matrix_q4 = Matrix([[0, -p_q4[2], p_q4[1]],[p_q4[2], 0, -p_q4[0]], [-p_q4[1], p_q4[0], 0]])
+        # inertia_integrand_q4 = r_matrix_q4.transpose()*r_matrix_q4
+        # j_q4 += 6*tetrahedron_vol_q4*rho*integrate(inertia_integrand_q4, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
+
+    mass_q4 = total_vol_q4 * args.density
+
+    print("volume = ", np.round(total_vol_q4, decimals = 3))
+    print("mass = ", np.round(mass_q4, decimals = 3))
+    print("com = ", com_q4/mass_q4)
+
+    numpy_ar = np.array(j_q4, dtype=float)
+    rounded_j_q4_ar = np.round(numpy_ar, decimals = 3)
+    j_q4_rounded = Matrix(rounded_j_q4_ar)
+    print("J = ")
+    pprint(j_q4_rounded)
+
 
