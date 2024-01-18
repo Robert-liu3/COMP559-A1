@@ -95,7 +95,11 @@ if __name__ == "__main__":
         j = 6*tetrahedron_vol*rho*integrate(inertia_integrand, (z, 0, 1 - x - y), (y, 0, 1 - x), (x, 0, 1))
 
         print("J = ")
-        pprint(j)
+
+        j_ar = np.array(j, dtype=float)
+        rounded_j_ar = np.round(j_ar, decimals = 8)
+        j_rounded = Matrix(rounded_j_ar)
+        pprint(j_rounded)
 
     #QUESTION 4
 
